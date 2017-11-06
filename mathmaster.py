@@ -13,12 +13,11 @@ def main():
     diff = 99999999999
     found = False
 
-    pCount = 50
 
     while pCount < len(p):
         count = 0
-        while count < 390625:
-            arr = [int(d) for d in str("%08d" % (convert_base(count, 5),))]
+        while count < 1679616:
+            arr = [int(d) for d in str("%08d" % (convert_base(count, 6),))]
             spaces = []
 
             for i in arr:
@@ -83,7 +82,7 @@ def main():
                 pc = p[pCount]
 
             count = count+1
-            sys.stdout.write('%d/%d> Completed: %.3f%%\r' % (pCount, len(p), multi(100,divi(count,(390625.0)))))
+            sys.stdout.write('%d/%d> Completed: %.3f%%\r' % (pCount, len(p), multi(100,divi(count,(1679616.0)))))
             sys.stdout.flush()
 
         print "\n---------------------"
@@ -107,31 +106,31 @@ def add(n, k):
     try:
         return n+float(k)
     except:
-        return 0
+        return -999999999999999999
 
 def sub(n,k):
     try:
         return n-float(k)
     except:
-        return 0
+        return -999999999999999999
 
 def multi(n,k):
     try:
         return n*float(k)
     except:
-        return 0
+        return -999999999999999999
 
 def divi(n,k):
     try:
         return n/float(k)
     except:
-        return 0
+        return -999999999999999999
 
 def powwa(n,k):
     try:
         return pow(n,float(k))
     except:
-        return 0
+        return -999999999999999999
 
 def cat(n,k):
     if n%2 == 0 or (n+1)%2 == 0:
@@ -141,7 +140,7 @@ def cat(n,k):
     try:
         return float(str(n) + str(k))
     except:
-        return 0
+        return -999999999999999999
 
 def switch_operator(x):
     return {
@@ -149,7 +148,8 @@ def switch_operator(x):
         1: '-',
         2: '*',
         3: '/',
-        4: '||',
+        4: '^',
+        5: '||',
     }[x]
 
 def convert_base(number, base):
@@ -255,17 +255,17 @@ def cemdas(equation):
             equation.insert(i-1, res)
             i = 0
         i = i+1
-    # i = 0
-    # while i < len(equation):
-    #     if equation[i] == '^':
-    #         res = powwa(equation[i-1], equation[i+1])
-    #         del equation[i-1]
-    #         del equation[i-1]
-    #         del equation[i-1]
-    #
-    #         equation.insert(i-1, res)
-    #         i = 0
-    #     i = i+1
+    i = 0
+    while i < len(equation):
+        if equation[i] == '^':
+            res = powwa(equation[i-1], equation[i+1])
+            del equation[i-1]
+            del equation[i-1]
+            del equation[i-1]
+
+            equation.insert(i-1, res)
+            i = 0
+        i = i+1
     i = 0
     while i < len(equation):
         if equation[i] == '*':
