@@ -3,104 +3,111 @@ import json
 import sys
 import copy
 import math
+import multiprocessing
+
+results = {"Exact":[], "Close":[]}
 
 def main():
     start_time = time.time()
     count = pCount = 0
-    p = parens()
-    answers = []
-    results = {"Exact":[], "Close":[]}
-    diff = 99999999999
-    found = False
+    pa = parens()
 
 
-    while pCount < len(p):
-        count = 0
-        while count < 1679616:
-            arr = [int(d) for d in str("%08d" % (convert_base(count, 6),))]
-            spaces = []
+    while pCount < len(pa):
+        jobs = []
+        for i in range(4):
+            if (i + pCount) < len(pa):
+                p = multiprocessing.Process(target=processUnit, args=(pa[pCount + i], pCount + i))
+                jobs.append(p)
+                p.start()
 
-            for i in arr:
-                spaces.append(switch_operator(i))
+        for job in jobs:
+            job.join()
 
-            s = copy.deepcopy(spaces)
-            result = evaluate(s, p[pCount])
-
-            if result == 10958:
-                print "\n--------Success!!-----------"
-                i = 0
-                numbers = [1,2,3,4,5,6,7,8,9]
-                equation = [None]*17
-
-                while i < 17:
-                    if i%2 == 0:
-                        equation[i] = numbers.pop(0)
-                    if i%2 == 1:
-                        equation[i] = spaces.pop(0)
-                    i = i+1
-
-                found = True
-                closest = copy.deepcopy(result)
-                diff = 0
-
-                print(equation)
-                print(p[pCount])
-                print count
-
-                results["Exact"].append({'result':result,'equation': equation, 'parens': p[pCount], 'count': count})
-
-            elif (not result % 1 == 0) and math.floor(result) == 10958 or math.ceil(result) == 10958:
-                i = 0
-                numbers = [1,2,3,4,5,6,7,8,9]
-                equation = [None]*17
-                t = copy.deepcopy(spaces)
-
-                while i < 17:
-                    if i%2 == 0:
-                        equation[i] = numbers.pop(0)
-                    if i%2 == 1:
-                        equation[i] = t.pop(0)
-                    i = i+1
-                # print(equation)
-                # print(p[pCount])
-                results['Close'].append({'result':result,'equation': equation, 'parens': p[pCount], 'count': count})
-
-            if abs(result - 10958) < diff and not found:
-                closest = copy.deepcopy(result)
-                diff = abs(closest - 10958)
-                i = 0
-                numbers = [1,2,3,4,5,6,7,8,9]
-                equation = [None]*17
-
-                while i < 17:
-                    if i%2 == 0:
-                        equation[i] = numbers.pop(0)
-                    if i%2 == 1:
-                        equation[i] = spaces.pop(0)
-                    i = i+1
-
-                pc = p[pCount]
-
-            count = count+1
-            sys.stdout.write('%d/%d> Completed: %.3f%%\r' % (pCount, len(p), multi(100,divi(count,(1679616.0)))))
-            sys.stdout.flush()
-
-        print "\n---------------------"
-        print(equation)
-        print(pc)
-        print ("So Fucking close: %f\nOff by that much: %f" % (closest,diff))
-        print("--- %s seconds ---\n" % (time.time() - start_time))
-        closest = 0
-        found = False
-        diff = 9999999
-        pCount = pCount+1
-
+        pCount = pCount + 5
 
     print("\nWriting to file.")
     with open('math.json', 'w') as outfile:
         json.dump(results, outfile, indent=4)
-
     print("--- %s seconds ---" % (time.time() - start_time))
+
+def processUnit(parenFormat, pCount):
+    diff = 99999999999
+    found = False
+    count = 0
+    closest = 0
+    print "Starting %d" % pCount
+
+    while count < 1679616:
+        arr = [int(d) for d in str("%08d" % (convert_base(count, 6),))]
+        spaces = []
+
+        for i in arr:
+            spaces.append(switch_operator(i))
+
+        s = copy.deepcopy(spaces)
+        result = evaluate(s, parenFormat)
+
+        if result == 10958:
+            print "\n--------Success!!-----------"
+            i = 0
+            numbers = [1,2,3,4,5,6,7,8,9]
+            equation = [None]*17
+
+            while i < 17:
+                if i%2 == 0:
+                    equation[i] = numbers.pop(0)
+                if i%2 == 1:
+                    equation[i] = spaces.pop(0)
+                i = i+1
+
+            found = True
+            closest = copy.deepcopy(result)
+            diff = 0
+
+            print(equation)
+            print(parenFormat)
+            print count
+
+            results["Exact"].append({'result':result,'equation': equation, 'parens': parenFormat, 'count': count})
+
+        elif (not result % 1 == 0) and math.floor(result) == 10958 or math.ceil(result) == 10958:
+            i = 0
+            numbers = [1,2,3,4,5,6,7,8,9]
+            equation = [None]*17
+            t = copy.deepcopy(spaces)
+
+            while i < 17:
+                if i%2 == 0:
+                    equation[i] = numbers.pop(0)
+                if i%2 == 1:
+                    equation[i] = t.pop(0)
+                i = i+1
+            # print(equation)
+            # print(p[pCount])
+            results['Close'].append({'result':result,'equation': equation, 'parens': parenFormat, 'count': count})
+
+        if abs(result - 10958) < diff and not found:
+            closest = copy.deepcopy(result)
+            diff = abs(closest - 10958)
+            i = 0
+            numbers = [1,2,3,4,5,6,7,8,9]
+            equation = [None]*17
+
+            while i < 17:
+                if i%2 == 0:
+                    equation[i] = numbers.pop(0)
+                if i%2 == 1:
+                    equation[i] = spaces.pop(0)
+                i = i+1
+
+            pc = parenFormat
+
+        count = count+1
+        # sys.stdout.write('%d/%d> Completed: %.3f%%\r' % (pCount, len(p), multi(100,divi(count,(1679616.0)))))
+        # sys.stdout.flush()
+
+    print "Ending %d" % pCount
 
 def add(n, k):
     try:
