@@ -331,7 +331,7 @@ def illegalConcat(parenFormat, arr):
     for i in range(len(parenFormat)):
         if parenFormat[i][0] - 2 > 0 and arr[parenFormat[i][0] - 2] == 5:
             return True
-        if arr[parenFormat[i][1]/2] and arr[parenFormat[i][1]/2] == 5:
+        if len(arr) - 1 > parenFormat[i][1]/2 and arr[parenFormat[i][1]/2] == 5:
             return True;
 
     return False
