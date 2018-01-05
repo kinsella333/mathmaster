@@ -42,6 +42,7 @@ def processUnit(parenFormat, pCount):
         spaces = []
 
         if illegalConcat(parenFormat, arr):
+            count = count + 1
             continue
 
         for i in arr:
