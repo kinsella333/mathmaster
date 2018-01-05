@@ -12,10 +12,9 @@ def main():
     count = pCount = 0
     pa = parens()
 
-
     while pCount < len(pa):
         jobs = []
-        for i in range(4):
+        for i in range(6):
             if (i + pCount) < len(pa):
                 p = multiprocessing.Process(target=processUnit, args=(pa[pCount + i], pCount + i))
                 jobs.append(p)
@@ -24,7 +23,7 @@ def main():
         for job in jobs:
             job.join()
 
-        pCount = pCount + 5
+        pCount = pCount + 6
 
     print("\nWriting to file.")
     with open('math.json', 'w') as outfile:
@@ -41,6 +40,9 @@ def processUnit(parenFormat, pCount):
     while count < 1679616:
         arr = [int(d) for d in str("%08d" % (convert_base(count, 6),))]
         spaces = []
+
+        if illegalConcat(parenFormat, arr):
+            continue
 
         for i in arr:
             spaces.append(switch_operator(i))
@@ -323,6 +325,16 @@ def paren_cmp(a,b):
             return 1
     else:
         return 1
+
+def illegalConcat(parenFormat, arr):
+    for i in range(len(parenFormat)):
+        if parenFormat[i][0] - 2 > 0 and arr[parenFormat[i][0] - 2] == 5:
+            return True
+        if parenFormat[i][1] - 1 > 0 and arr[parenFormat[i][0] - 1] == 5:
+            return True;
+
+    return False
+
 
 if __name__ == "__main__":
     main()
