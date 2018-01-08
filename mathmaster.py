@@ -18,7 +18,9 @@ def main():
         if len(pa_init[i]) > 2:
             pa.append(pa_init[i])
 
-    print "Number of %d" % len(pa)
+    print "Number of Paren Combinations %d" % len(pa)
+    print "Highest Number of Paren Pairs %d" % numParens
+    print "Number of workers %d" % numWorkers
 
     while pCount < len(pa):
         jobs = []
@@ -33,7 +35,7 @@ def main():
 
         print("Batch finished in %s seconds ---" % (time.time() - start_time))
         start_time = time.time()
-        pCount = pCount + 6
+        pCount = pCount + numWorkers
 
     print("\nWriting to file.")
     with open('math.json', 'w') as outfile:
@@ -44,13 +46,13 @@ def processUnit(parenFormat, pCount):
     found = False
     count = 0
     closest = 0
-    print "Starting %d" % pCount
+    print "Starting Worker %d" % pCount
 
     while count < 1679616:
         arr = [int(d) for d in str("%08d" % (convert_base(count, 6),))]
         spaces = []
 
-        if illegalConcat(parenFormat, arr):
+        if parenSpeedup(parenFormat, arr):
             count = count + 1
             continue
 
@@ -96,7 +98,8 @@ def processUnit(parenFormat, pCount):
                     equation[i] = t.pop(0)
                 i = i+1
             # print(equation)
-            # print(p[pCount])
+            # print(parenFormat)
+            # print result
             results['Close'].append({'result':result,'equation': equation, 'parens': parenFormat, 'count': count})
 
         if abs(result - 10958) < diff and not found:
@@ -104,20 +107,24 @@ def processUnit(parenFormat, pCount):
             diff = abs(closest - 10958)
             i = 0
             numbers = [1,2,3,4,5,6,7,8,9]
-            equation = [None]*17
+            closest_equation = [None]*17
 
             while i < 17:
                 if i%2 == 0:
-                    equation[i] = numbers.pop(0)
+                    closest_equation[i] = numbers.pop(0)
                 if i%2 == 1:
-                    equation[i] = spaces.pop(0)
+                    closest_equation[i] = spaces.pop(0)
                 i = i+1
 
             pc = parenFormat
 
         count = count+1
 
-    print "Ending %d" % pCount
+    print "----------\nEnding worker %d" % pCount
+    print closest_equation
+    print pc
+    print closest
+    print "----------"
 
 def add(n, k):
     try:
@@ -359,12 +366,22 @@ def paren_cmp(a,b):
     else:
         return 1
 
-def illegalConcat(parenFormat, arr):
+def parenSpeedup(parenFormat, arr):
+    count = 0
     for i in range(len(parenFormat)):
         if parenFormat[i][0] - 2 > 0 and arr[parenFormat[i][0] - 2] == 5:
             return True
         if len(arr) - 1 > parenFormat[i][1]/2 and arr[parenFormat[i][1]/2] == 5:
             return True;
+        if not parenFormat[i][0] - 2 > 0 and len(arr) - 1 > parenFormat[i][1]/2 and arr[parenFormat[i][1]/2] < 2:
+            count = count + 1
+        elif not len(arr) - 1 > parenFormat[i][1]/2 and parenFormat[i][0] - 2 > 0 and arr[parenFormat[i][0] - 2] < 2:
+            count = count + 1
+        elif parenFormat[i][0] - 2 > 0 and len(arr) - 1 > parenFormat[i][1]/2 and arr[parenFormat[i][0] - 2] < 2 and arr[parenFormat[i][1]/2] < 2:
+            count = count + 1
+
+    if count == len(parenFormat):
+        return True
 
     return False
 
