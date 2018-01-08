@@ -6,15 +6,23 @@ import math
 import multiprocessing
 
 results = {"Exact":[], "Close":[]}
+numWorkers = 6
+numParens = 4
 
 def main():
     start_time = time.time()
     count = pCount = 0
-    pa = parens()
+    pa_init = parens()
+    pa = []
+    for i in range(len(pa_init)):
+        if len(pa_init[i]) > 2:
+            pa.append(pa_init[i])
+
+    print "Number of %d" % len(pa)
 
     while pCount < len(pa):
         jobs = []
-        for i in range(6):
+        for i in range(numWorkers):
             if (i + pCount) < len(pa):
                 p = multiprocessing.Process(target=processUnit, args=(pa[pCount + i], pCount + i))
                 jobs.append(p)
@@ -23,12 +31,13 @@ def main():
         for job in jobs:
             job.join()
 
+        print("Batch finished in %s seconds ---" % (time.time() - start_time))
+        start_time = time.time()
         pCount = pCount + 6
 
     print("\nWriting to file.")
     with open('math.json', 'w') as outfile:
         json.dump(results, outfile, indent=4)
-    print("--- %s seconds ---" % (time.time() - start_time))
 
 def processUnit(parenFormat, pCount):
     diff = 99999999999
@@ -107,8 +116,6 @@ def processUnit(parenFormat, pCount):
             pc = parenFormat
 
         count = count+1
-        # sys.stdout.write('%d/%d> Completed: %.3f%%\r' % (pCount, len(p), multi(100,divi(count,(1679616.0)))))
-        # sys.stdout.flush()
 
     print "Ending %d" % pCount
 
@@ -177,6 +184,7 @@ def convert_base(number, base):
 def parens():
     count = 0
     parens = {}
+
     for i in range(9):
         j = 1
         for j in range (9):
@@ -185,26 +193,50 @@ def parens():
                 parens[count].append((i*2,j*2, j*2-i*2))
                 count = count+1
 
-    for k in range(len(parens)):
-        i = 0
-        for i in range(9):
-            j = 1
-            for j in range (9):
-                match = False
-                if j - i > 0:
-                    temp = [[i*2,j*2, j*2-i*2],[parens[k][0][0], parens[k][0][1], parens[k][0][1] - parens[k][0][0]]]
-                    temp.sort(paren_cmp);
-                    if i != 0 and j*2 != 16  and parens[k][0][0] != 0 and parens[k][0][1] and not(i*2 == parens[k][0][0] and j*2 == parens[k][0][1]) and ((i*2 >= parens[k][0][0] and j*2 <= parens[k][0][1]) or (i*2 <= parens[k][0][0] and j*2 >= parens[k][0][1])):
-                        for g in range(len(parens)):
-                            if len(parens[g]) > 1:
-                                if (parens[g][0][0] == temp[0][0] and parens[g][0][1] == temp[0][1]) and (parens[g][1][0] == temp[1][0] and parens[g][1][1] == temp[1][1]):
+    for g in range(2,numParens):
+        for k in range(len(parens)):
+            i = 0
+            for i in range(9):
+                j = 1
+                for j in range (9):
+                    match = False
+                    if j - i > 0:
+                        temp = [(i*2,j*2, j*2-i*2)]
+                        for e in parens[k]:
+                            temp.append(e)
+
+                        temp.sort(paren_cmp);
+                        if isLegalParen(temp):
+                            for check in parens:
+                                if check == temp:
                                     match = True
                                     break
-                        if not match:
-                            parens[count] = [[i*2,j*2, j*2-i*2], [parens[k][0][0], parens[k][0][1], parens[k][0][1] - parens[k][0][0]]]
-                            parens[count].sort(paren_cmp);
-                            count = count+1
+                            if not match:
+                                sys.stdout.write('Completed %d\r' % len(parens))
+                                sys.stdout.flush()
+                                parens[count] = temp
+                                parens[count].sort(paren_cmp);
+                                count = count+1
     return parens
+
+def isLegalParen(temp):
+    count = 0
+
+    if temp[0][0] != 0 and temp[0][1] != 16:
+        for e1 in temp:
+            for e2 in temp:
+                if e1 != e2:
+                    if not (not(e1[0] == e2[0] and e1[1] == e2[1]) and ((e1[0] >= e2[0] and e1[1] <= e2[1]) or (e1[0] <= e2[0] and e1[1] >= e2[1]))):
+                        return False
+                else:
+                    count = count + 1
+    else:
+        return False
+
+    if count > len(temp):
+        return False
+
+    return True
 
 def evaluate(operators, p):
     numbers = [1,2,3,4,5,6,7,8,9]
