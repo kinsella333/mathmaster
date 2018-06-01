@@ -121,8 +121,7 @@ def processUnit(parenFormat, pCount):
         count = count+1
 
     print "----------\nEnding worker %d" % pCount
-    print closest_equation
-    print pc
+    print build_equation(closest_equation, pc)
     print closest
     print "----------"
 
@@ -385,6 +384,25 @@ def parenSpeedup(parenFormat, arr):
 
     return False
 
+def build_equation(equation, pc):
+    eq = []
+    for item in range(len(equation) + len(pc)*2):
+        count=0
+        for p in pc:
+            if p[1] == item-1:
+                eq.append(')')
+                count=count+1
+            if p[0] == item:
+                eq.append('(')
+                count=count+1
+
+        try:
+            eq.append(str(equation.pop(0)))
+        except:
+            break
+        item=item+count
+
+    return ''.join(eq)
 
 if __name__ == "__main__":
     main()
